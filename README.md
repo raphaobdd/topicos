@@ -23,11 +23,13 @@ python -m dengue.ml.train_tree --csv data/DENGBR24.csv.zip --amostra-aleatoria 5
 python -m dengue.rag.ingest
 ```
 
-A carga é transacional e reconhece o hash do arquivo para não duplicar a mesma versão. A árvore treinada em amostra é uma avaliação estatística acadêmica; não representa risco individual. A chave DeepSeek e a conexão Supabase nunca devem ser incluídas no repositório.
+**Alternativa sem URL PostgreSQL:** com `SUPABASE_URL` e `SUPABASE_SERVICE_KEY`, execute `python -m dengue.ml.import_sinan_rest`. O importador usa a API HTTPS para carregar uma amostra reproduzível de 1,5% do CSV completo (semente 42), distribuída ao longo do arquivo. A carga é idempotente; reexecutar não duplica linhas. Em 23/11/2026, foram selecionadas e confirmadas **97.981 linhas** no Supabase. Isso é uma amostra para demonstração, não a base integral de 6.564.924 registros. O arquivo integral permanece em `data/DENGBR24.csv.zip` para análise e treino locais.
+
+A carga é transacional e reconhece o hash do arquivo para não duplicar a mesma versão. A árvore treinada em amostra é uma avaliação estatística acadêmica; não representa risco individual. A chave OpenAI e a conexão Supabase nunca devem ser incluídas no repositório.
 
 A apresentação atualizada está em `apresentacao/sistema_dengue_atualizado.pptx` e `.pdf`; regenere ambos com `python scripts/gerar_apresentacao.py` depois de refazer o treino. Os slides distinguem resultados medidos das integrações ainda pendentes. Antes de uma demonstração com serviços reais:
 
-1. Criar projeto Supabase e chave da API DeepSeek; preencher `DEEPSEEK_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` e `SUPABASE_DB_URL` no `.env` local.
+1. Criar projeto Supabase e chave da API OpenAI; preencher `OPENAI_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` e `SUPABASE_DB_URL` no `.env` local.
 2. Conferir espaço disponível no projeto Supabase antes de carregar os 6,56 milhões de registros; a carga seleciona 23 colunas e mantém uma versão por hash de origem.
 3. Executar o SQL, importar a base e indexar o PDF; verificar a contagem no banco e o status dos componentes na interface.
 4. Percorrer um caso sintético sem alerta e outro com alerta no Streamlit; conferir orientações citadas, interrupção, relatório e sessão salva.
@@ -36,7 +38,7 @@ A apresentação atualizada está em `apresentacao/sistema_dengue_atualizado.ppt
 ```bash
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env                                   # preencha DEEPSEEK_API_KEY
+cp .env.example .env                                   # preencha OPENAI_API_KEY
 pytest                                                 # 35 testes, sem rede
 
 # (1) RAG: coloque PDFs oficiais em data/docs/ (ex.: "Dengue: diagnóstico e manejo clínico", Min. Saúde)
@@ -63,7 +65,7 @@ Sem Supabase: RAG usa `data/vetores_locais.json` e as sessões não são persist
 |---|---|
 | `dengue/schemas.py` | Modelos Pydantic; informação **tri-estado** (`sim` / `nao` / `nao_informado`) |
 | `dengue/perguntas.py` | Roteiro das seções A–E (perguntas agrupadas, 1 campo por sinal) |
-| `dengue/agents/coleta.py` | **Agente 1** — roteiro determinístico + DeepSeek só interpreta a resposta livre (JSON validado) |
+| `dengue/agents/coleta.py` | **Agente 1** — roteiro determinístico + OpenAI só interpreta a resposta livre (JSON validado) |
 | `dengue/safety.py` | **Regras explícitas** de sinais de alerta e classificação A/B/C/D (sem LLM) |
 | `dengue/orchestrator.py` | Orquestrador: fluxo, verificação a cada turno, interrupção, persistência |
 | `dengue/agents/analise.py` | **Agente 2** — grupo vem das regras; árvore complementa; LLM só redige o resumo |
@@ -83,8 +85,21 @@ Sem Supabase: RAG usa `data/vetores_locais.json` e as sessões não são persist
 
 ## Pontos de atenção
 
-- Modelos padrão: `DEEPSEEK_MODEL=deepseek-flash` para texto/JSON e `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` local para embeddings de 384 dimensões. O pacote `openai` é usado apenas como cliente compatível com a API DeepSeek. Na primeira ingestão, o modelo de embeddings será baixado. Vetores antigos de 768 dimensões precisam ser descartados e os documentos reindexados.
-- A API DeepSeek documenta texto e JSON, mas não fornece embeddings para este fluxo. `python -m dengue.rag.ingest --local` funciona sem chave DeepSeek e cria `data/vetores_locais.json`. Para Supabase, execute `python -m dengue.rag.ingest` após configurar `SUPABASE_URL` e `SUPABASE_SERVICE_KEY`. Se você já criou `documentos` com `vector(768)`, execute `supabase_recriar_rag_384.sql` e depois `supabase_schema.sql` antes de reindexar.
+- Modelo padrão: `OPENAI_MODEL=gpt-4.1-mini` para texto/JSON. O RAG usa `sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2` local para embeddings de 384 dimensões. O índice já criado no Supabase continua válido; a troca da API de texto não exige reindexação.
+- `python -m dengue.rag.ingest --local` cria `data/vetores_locais.json` sem chave da API. Para Supabase, execute `python -m dengue.rag.ingest --supabase` após configurar `SUPABASE_URL` e `SUPABASE_SERVICE_KEY`. Se você já criou `documentos` com `vector(768)`, execute `supabase_recriar_rag_384.sql` e depois `supabase_schema.sql` antes de reindexar.
 - `RAG_STORE=auto` usa o índice local quando `data/vetores_locais.json` existe, mesmo com Supabase configurado para salvar sessões. Defina `RAG_STORE=supabase` no `.env` para usar os vetores remotos, ou `RAG_STORE=local` para forçar o arquivo local.
+
+### Fontes por agente
+
+Todos os PDFs ficam na mesma tabela `documentos`. Cada trecho recebe um marcador de capítulo no conteúdo; a recuperação filtra por agente antes de fornecer contexto ao modelo. Reexecute `python -m dengue.rag.ingest --supabase` depois de atualizar os PDFs, pois trechos antigos sem marcador não entram nas buscas dos agentes.
+
+| Agente | Fontes autorizadas |
+|---|---|
+| 1, coleta | Manual clínico 2024: 2, 2.1–2.5, 3, 4.1 |
+| 2, análise | Manual clínico 2024: 2.2, 5, 6, 6.1–6.5, 10.1–10.3 |
+| 3, orientações | Manual clínico 2024: 6.1–6.5, 6.9, 6.10, 7, 8, 9, 11; fluxograma completo; Manual de Enfermagem completo |
+| 4, relatório | Ficha e instruções do SINAN; capítulo 10 do manual clínico 2024 |
+
+O RAG serve de apoio documental. A classificação A/B/C/D continua determinada pelas regras e o relatório não constitui notificação oficial ao SINAN. As fontes e seus hashes estão em `data/FONTES.md`.
 - Confira no dicionário do DENGBR24 os códigos usados em `dengue/ml/features.py` (`CLASSI_FIN`, `CS_GESTANT`, `NU_IDADE_N`, nomes de colunas) e o separador do CSV (`--sep`).
 - Se mudar `EMBED_DIM`, recrie a coluna/índice `vector(...)` e reindexe os documentos.

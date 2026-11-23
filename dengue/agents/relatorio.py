@@ -14,6 +14,7 @@ from datetime import datetime
 from typing import Optional
 
 from ..llm import LLM
+from ..rag.retriever import Retriever
 from ..perguntas import PERGUNTAS, ROTULOS, todos_campos_perguntados
 from ..safety import ALERTAS
 from ..schemas import (
@@ -40,8 +41,9 @@ _VALORES = {"F": "Feminino", "M": "Masculino", "melhorando": "Melhorando", "pior
 
 
 class AgenteRelatorio:
-    def __init__(self, llm: Optional[LLM] = None):
+    def __init__(self, llm: Optional[LLM] = None, retriever: Optional[Retriever] = None):
         self.llm = llm
+        self.retriever = retriever
 
     def resumo_ia(self, estado: ColetaEstado, seg: ResultadoSeguranca, analise: AnaliseInicial) -> Optional[str]:
         if self.llm is None:
@@ -176,12 +178,28 @@ class AgenteRelatorio:
         L += [""]
 
         L += ["## 11. Referências utilizadas"]
+        if analise.referencias_documentais:
+            L.append("**Apoio documental da análise (Agente 2):**")
+            L.extend(f"- {r}" for r in analise.referencias_documentais)
         if orient.referencias:
             for r in orient.referencias:
                 pg = f", p. {r.pagina}" if r.pagina else ""
                 L.append(f"{r.numero}. {r.fonte}{pg} — “{r.trecho.strip()}…”")
         else:
             L.append("Nenhum documento foi citado (orientações fixas e de segurança).")
+        if self.retriever and not estado.interrompida:
+            try:
+                trechos = self.retriever.buscar_varias(
+                    ["ficha de notificação dengue SINAN dados de identificação e notificação",
+                     "instruções de preenchimento da ficha SINAN dengue",
+                     "definição e classificação dos casos de dengue"],
+                    k_total=6, agente=4)
+                if trechos:
+                    L.append("**Apoio documental para registro (Agente 4; não é uma notificação oficial):**")
+                    for t in trechos:
+                        L.append(f"- {t.fonte}, p. {t.pagina}: {t.conteudo[:180]}")
+            except Exception:
+                pass
         L += [""]
 
         sem_resp, nao_perg = [], []

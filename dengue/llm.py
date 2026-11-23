@@ -1,4 +1,4 @@
-"""Texto/JSON pela API DeepSeek; embeddings locais para o RAG."""
+"""Texto/JSON pela API OpenAI; embeddings locais para o RAG."""
 from __future__ import annotations
 
 import json
@@ -57,35 +57,34 @@ class LocalEmbedder:
         return saida
 
 
-class DeepSeekLLM(LocalEmbedder):
+class OpenAILLM(LocalEmbedder):
     def __init__(self, api_key: str | None = None, modelo: str | None = None,
                  modelo_embed: str | None = None, dim: int | None = None, client=None, encoder=None):
         from openai import OpenAI
 
-        self.api_key = api_key or config.DEEPSEEK_API_KEY
+        self.api_key = api_key or config.OPENAI_API_KEY
         if not self.api_key and client is None:
-            raise LLMErro("DEEPSEEK_API_KEY não configurada. Copie .env.example para .env e preencha.")
-        self.client = client if client is not None else OpenAI(
-            api_key=self.api_key, base_url="https://api.deepseek.com", max_retries=2)
-        self.modelo = modelo or config.DEEPSEEK_MODEL
+            raise LLMErro("OPENAI_API_KEY não configurada. Copie .env.example para .env e preencha.")
+        self.client = client if client is not None else OpenAI(api_key=self.api_key, max_retries=2)
+        self.modelo = modelo or config.OPENAI_MODEL
         super().__init__(modelo_embed=modelo_embed, dim=dim, encoder=encoder)
 
     def _gerar(self, sistema: str, prompt: str, temperatura: float, json_mode: bool) -> str:
-        kwargs = {"model": self.modelo, "instructions": sistema, "input": prompt,
-                  "temperature": temperatura, "store": False,
-                  "reasoning": {"effort": "none"}}
+        entrada = f"Responda em JSON conforme as instruções.\n\n{prompt}" if json_mode else prompt
+        kwargs = {"model": self.modelo, "instructions": sistema, "input": entrada,
+                  "temperature": temperatura, "store": False}
         if json_mode:
             kwargs["text"] = {"format": {"type": "json_object"}}
         try:
             resp = self.client.responses.create(**kwargs)
         except Exception as e:
-            if getattr(e, "status_code", None) == 402:
-                raise LLMErro("Saldo insuficiente na conta DeepSeek. Confira o faturamento no painel da DeepSeek.") from e
             if getattr(e, "status_code", None) == 401:
-                raise LLMErro("Chave DeepSeek inválida ou sem acesso. Confira DEEPSEEK_API_KEY no .env.") from e
-            raise LLMErro(f"Falha ao chamar a DeepSeek: {type(e).__name__}") from e
+                raise LLMErro("Chave da API OpenAI inválida. Confira OPENAI_API_KEY no .env.") from e
+            if getattr(e, "status_code", None) == 429:
+                raise LLMErro("A API OpenAI recusou a chamada por limite ou cota. Confira o uso e o faturamento da conta.") from e
+            raise LLMErro(f"Falha ao chamar a API OpenAI: {type(e).__name__}") from e
         if resp.status != "completed" or not resp.output_text:
-            raise LLMErro("Resposta vazia ou incompleta da DeepSeek.")
+            raise LLMErro("Resposta vazia ou incompleta da API OpenAI.")
         return resp.output_text.strip()
 
     def texto(self, sistema: str, prompt: str, temperatura: float = 0.2) -> str:

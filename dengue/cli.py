@@ -1,4 +1,4 @@
-"""Conversa pelo terminal (sem Streamlit) — útil para depurar com a API DeepSeek.
+"""Conversa pelo terminal (sem Streamlit) — útil para depurar com a API OpenAI.
 
     python -m dengue.cli
 """

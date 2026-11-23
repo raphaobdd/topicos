@@ -9,8 +9,8 @@ from tests.conftest import BASE, FakeLLM, embedding_hash
 def retriever_com_docs(tmp_path, llm):
     store = LocalStore(tmp_path / "v.json")
     docs = [
-        ("manual_ms", 12, "Sinais de alarme da dengue incluem dor abdominal intensa e contínua, vômitos persistentes e sangramento de mucosa. Procure atendimento."),
-        ("manual_ms", 20, "Grupo A: hidratação oral e retorno se surgirem sinais de alarme. Evitar anti-inflamatórios e ácido acetilsalicílico."),
+        ("fluxograma_manejo_dengue_2025", 1, "[[capitulo:integral]] Sinais de alarme da dengue incluem dor abdominal intensa e contínua, vômitos persistentes e sangramento de mucosa. Procure atendimento."),
+        ("manual_enfermagem_dengue_2026", 20, "[[capitulo:integral]] Grupo A: hidratação oral e retorno se surgirem sinais de alarme. Evitar anti-inflamatórios e ácido acetilsalicílico."),
     ]
     store.adicionar([{"fonte": f, "pagina": p, "conteudo": c, "embedding": embedding_hash(c)} for f, p, c in docs])
     return Retriever(llm, store, k=4)
@@ -32,7 +32,7 @@ def test_fluxo_normal_gera_resultado_e_relatorio_completo(tmp_path):
     r = orq.executar(estado)
     assert not r.interrompido and r.analise.classificacao.grupo == Grupo.A
     assert r.orientacoes.orientacoes and r.orientacoes.referencias
-    assert r.orientacoes.referencias[0].fonte == "manual_ms"
+    assert r.orientacoes.referencias[0].fonte in {"fluxograma_manejo_dengue_2025", "manual_enfermagem_dengue_2026"}
     for n in range(1, 13):
         assert f"## {n}. " in r.relatorio_md, f"seção {n} ausente"
     assert "Grupo A" in r.relatorio_md and "Não perguntado" not in r.relatorio_md.split("## 12.")[0]

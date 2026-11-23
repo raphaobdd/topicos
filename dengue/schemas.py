@@ -224,6 +224,7 @@ class AnaliseInicial(BaseModel):
     arvore: Optional[PrevisaoArvore] = None
     arvore_motivo_ausencia: Optional[str] = None
     resumo: str = ""
+    referencias_documentais: list[str] = Field(default_factory=list)
 
 
 class ItemOrientacao(BaseModel):

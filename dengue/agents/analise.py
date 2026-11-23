@@ -11,6 +11,7 @@ from typing import Optional
 
 from ..llm import LLM
 from ..ml.predict import PreditorArvore
+from ..rag.retriever import Retriever
 from ..safety import classificar_manejo
 from ..schemas import AnaliseInicial, DadosPaciente, ResultadoSeguranca
 
@@ -25,9 +26,11 @@ Regras:
 
 
 class AgenteAnalise:
-    def __init__(self, llm: LLM, preditor: Optional[PreditorArvore] = None):
+    def __init__(self, llm: LLM, preditor: Optional[PreditorArvore] = None,
+                 retriever: Optional[Retriever] = None):
         self.llm = llm
         self.preditor = preditor
+        self.retriever = retriever
 
     # fluxo normal
     def analisar(self, dados: DadosPaciente, seg: ResultadoSeguranca) -> AnaliseInicial:
@@ -45,7 +48,18 @@ class AgenteAnalise:
                 motivo = f"falha ao executar o modelo ({type(e).__name__})"
 
         analise = AnaliseInicial(classificacao=classif, arvore=arvore, arvore_motivo_ausencia=motivo)
-        analise.resumo = self._resumo(analise)
+        contexto = ""
+        if self.retriever:
+            try:
+                trechos = self.retriever.buscar(
+                    f"dengue classificação de risco grupo {classif.grupo.value} sinais de alarme",
+                    k=3, agente=2)
+                analise.referencias_documentais = [
+                    f"{t.fonte}, p. {t.pagina}: {t.conteudo[:180]}" for t in trechos]
+                contexto = "\n".join(analise.referencias_documentais)
+            except Exception:
+                pass
+        analise.resumo = self._resumo(analise, contexto)
         return analise
 
     # fluxo interrompido por sinal de alerta: sem LLM e sem árvore (só regras)
@@ -60,7 +74,7 @@ class AgenteAnalise:
         return analise
 
     # ------------------------------------------------------------------ #
-    def _resumo(self, a: AnaliseInicial) -> str:
+    def _resumo(self, a: AnaliseInicial, contexto: str = "") -> str:
         c = a.classificacao
         prompt = (
             f"Grupo (regras do protocolo): {c.grupo.value}\n"
@@ -77,6 +91,8 @@ class AgenteAnalise:
             )
         else:
             prompt += f"Árvore de decisão: não utilizada ({a.arvore_motivo_ausencia}).\n"
+        if contexto:
+            prompt += f"Trechos documentais de apoio (não alteram o grupo):\n{contexto}\n"
         try:
             texto = self.llm.texto(SISTEMA, prompt, temperatura=0.2)
             return texto if texto else self._resumo_fixo(a)

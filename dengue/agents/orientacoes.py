@@ -63,7 +63,7 @@ class AgenteOrientacoes:
             return self._sem_contexto("A base de documentos (RAG) está vazia ou indisponível; orientações específicas não foram geradas.")
 
         try:
-            trechos = self.retriever.buscar_varias(self.montar_consultas(dados, analise))
+            trechos = self.retriever.buscar_varias(self.montar_consultas(dados, analise), agente=3)
         except Exception as e:
             return self._sem_contexto(f"Falha na recuperação de documentos ({type(e).__name__}).")
         if not trechos:

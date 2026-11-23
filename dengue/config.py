@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 RAIZ = Path(__file__).resolve().parent.parent
 load_dotenv(RAIZ / ".env")
 
-DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
-DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-flash")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-mini")
 EMBED_MODEL = os.getenv("EMBED_MODEL", "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
 EMBED_DIM = int(os.getenv("EMBED_DIM", "384"))
 

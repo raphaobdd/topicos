@@ -5,6 +5,7 @@ import pytest
 
 from dengue.ml.features import COLUNAS_SINAN
 from dengue.ml.import_sinan import COLUNAS, linhas_csv, sha256_arquivo
+from dengue.ml.import_sinan_rest import selecionar
 from dengue.ml.train_tree import carregar_amostra_aleatoria
 
 
@@ -43,3 +44,16 @@ def test_amostra_aleatoria_reproduzivel_e_cobre_arquivo(tmp_path):
     b = carregar_amostra_aleatoria(str(p), 50)
     assert a.equals(b) and len(a) == 50
     assert a["NU_IDADE_N"].max() > 4500
+
+
+def test_selecao_rest_reproduzivel(tmp_path):
+    p = tmp_path / "amostra.csv"
+    campos = [c for c in COLUNAS_SINAN if c != "NU_NOTIFIC"]
+    with p.open("w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=campos)
+        w.writeheader()
+        for _ in range(100):
+            w.writerow({"CLASSI_FIN": "10"})
+    a = list(selecionar(p, 0.1))
+    assert a == list(selecionar(p, 0.1))
+    assert 0 < len(a) < 100

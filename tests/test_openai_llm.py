@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from dengue.llm import DeepSeekLLM, LLMErro, LocalEmbedder
+from dengue.llm import LLMErro, LocalEmbedder, OpenAILLM
 
 
 class Respostas:
@@ -21,30 +21,31 @@ class Encoder:
         return [[1.0, 0.0] for _ in textos]
 
 
-def test_deepseek_texto_json_e_embedding_local():
+def test_openai_texto_json_e_embedding_local():
     client = SimpleNamespace(responses=Respostas())
-    llm = DeepSeekLLM(client=client, encoder=Encoder(), dim=2)
+    llm = OpenAILLM(client=client, encoder=Encoder(), dim=2)
     assert llm.texto("sistema", "prompt") == "Resumo."
     assert llm.json("sistema", "prompt")["campos"] == {}
     assert client.responses.calls[1]["text"] == {"format": {"type": "json_object"}}
-    assert all(c["reasoning"] == {"effort": "none"} for c in client.responses.calls)
+    assert "JSON" in client.responses.calls[1]["input"]
+    assert all(c["store"] is False for c in client.responses.calls)
     assert llm.embed(["um", "dois"]) == [[1.0, 0.0], [1.0, 0.0]]
 
 
-def test_deepseek_exige_chave_sem_cliente(monkeypatch):
-    monkeypatch.setattr("dengue.config.DEEPSEEK_API_KEY", "")
-    with pytest.raises(LLMErro, match="DEEPSEEK_API_KEY"):
-        DeepSeekLLM()
+def test_openai_exige_chave_sem_cliente(monkeypatch):
+    monkeypatch.setattr("dengue.config.OPENAI_API_KEY", "")
+    with pytest.raises(LLMErro, match="OPENAI_API_KEY"):
+        OpenAILLM()
     assert LocalEmbedder(encoder=Encoder(), dim=2).embed(["dengue"]) == [[1.0, 0.0]]
 
 
-def test_deepseek_saldo_insuficiente_tem_mensagem_util():
-    class SemSaldo:
+def test_openai_cota_indisponivel_tem_mensagem_util():
+    class SemCota:
         def create(self, **kwargs):
-            erro = RuntimeError("Insufficient Balance")
-            erro.status_code = 402
+            erro = RuntimeError("Quota exceeded")
+            erro.status_code = 429
             raise erro
 
-    llm = DeepSeekLLM(client=SimpleNamespace(responses=SemSaldo()))
-    with pytest.raises(LLMErro, match="Saldo insuficiente"):
+    llm = OpenAILLM(client=SimpleNamespace(responses=SemCota()))
+    with pytest.raises(LLMErro, match="limite ou cota"):
         llm.json("JSON", "idade 22")

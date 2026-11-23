@@ -27,7 +27,7 @@ SLIDES = [
         "O projeto apoia uma avaliação inicial experimental e gera um relatório estruturado.",
         "O atendimento presencial continua indispensável."]),
     ("Arquitetura implementada", [
-        "1  Coleta: roteiro fixo; DeepSeek interpreta respostas livres em JSON validado.",
+        "1  Coleta: roteiro fixo; OpenAI interpreta respostas livres em JSON validado.",
         "2  Análise: grupo A/B/C/D por regras; árvore acrescenta estatística da base.",
         "3  Orientações: busca em manual oficial, com fonte e página.",
         "4  Relatório: Markdown montado dos dados estruturados.",
@@ -42,7 +42,7 @@ SLIDES = [
         "Código: Streamlit, quatro agentes, regras, treino e relatórios implementados.",
         "Dados: CSV oficial baixado; manual de manejo do Ministério da Saúde disponível para indexação.",
         "Supabase: esquema e importador preparados; carga remota depende do projeto e conexão.",
-        "DeepSeek depende de chave API; o RAG usa embeddings locais a indexar.",
+        "OpenAI depende de chave API; o RAG usa embeddings locais indexados no Supabase.",
         "Testes automatizados: executar antes da demonstração."]),
     ("Limitações e próximos passos", [
         "Validar sinais e classificações com profissional de saúde e protocolo vigente.",

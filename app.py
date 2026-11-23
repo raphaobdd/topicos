@@ -17,12 +17,12 @@ def get_orquestrador():
 
 try:
     orq = get_orquestrador()
-except Exception as e:  # ex.: sem DEEPSEEK_API_KEY
+except Exception as e:  # ex.: sem OPENAI_API_KEY
     st.error(f"Não foi possível iniciar a aplicação: {e}")
     if isinstance(e, ModuleNotFoundError):
         st.info("Instale as dependências com `python -m pip install -r requirements.txt` e reinicie.")
-    elif "DEEPSEEK_API_KEY" in str(e):
-        st.info("Copie `.env.example` para `.env`, preencha `DEEPSEEK_API_KEY` e reinicie.")
+    elif "OPENAI_API_KEY" in str(e):
+        st.info("Copie `.env.example` para `.env`, preencha `OPENAI_API_KEY` e reinicie.")
     else:
         st.info("Confira as configurações do `.env` e o status dos serviços usados pela aplicação.")
     st.stop()

@@ -38,10 +38,10 @@ class Orquestrador:
         preditor: Optional[PreditorArvore] = None,
         repositorio: Optional[Repositorio] = None,
     ):
-        self.coleta = AgenteColeta(llm)
-        self.analise = AgenteAnalise(llm, preditor)
+        self.coleta = AgenteColeta(llm, retriever=retriever)
+        self.analise = AgenteAnalise(llm, preditor, retriever=retriever)
         self.orientacoes = AgenteOrientacoes(llm, retriever)
-        self.relatorio = AgenteRelatorio(llm)
+        self.relatorio = AgenteRelatorio(llm, retriever=retriever)
         self.repositorio = repositorio or RepositorioNulo()
         self._retriever, self._preditor = retriever, preditor
 
@@ -123,7 +123,7 @@ class Orquestrador:
         if self._retriever is not None:
             rag = f"{self._retriever.store.nome}" + ("" if self._retriever.disponivel() else " — vazio (rode a ingestão)")
         return {
-            "LLM": config.DEEPSEEK_MODEL,
+            "LLM": config.OPENAI_MODEL,
             "RAG": rag,
             "Árvore de decisão": (
                 "ativa" if self._preditor and self._preditor.utilizavel
@@ -136,10 +136,10 @@ class Orquestrador:
 
 def criar_orquestrador() -> Orquestrador:
     from .db import criar_repositorio
-    from .llm import DeepSeekLLM
+    from .llm import OpenAILLM
     from .rag.store import criar_store
 
-    llm = DeepSeekLLM()
+    llm = OpenAILLM()
     retriever = Retriever(llm, criar_store(), k=config.RAG_TOP_K)
     return Orquestrador(
         llm,
