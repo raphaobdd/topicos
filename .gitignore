@@ -1,0 +1,8 @@
+.env
+__pycache__/
+.pytest_cache/
+.venv/
+data/DENGBR24*
+data/vetores_locais.json
+models/*.joblib
+data/treino_*.log

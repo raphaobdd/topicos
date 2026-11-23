@@ -1,0 +1,41 @@
+{
+  "features": [
+    "idade_anos",
+    "sexo_feminino",
+    "gestante",
+    "dias_sintomas",
+    "febre",
+    "cefaleia",
+    "dor_retro_orbitaria",
+    "mialgia",
+    "artralgia",
+    "nausea",
+    "vomito",
+    "exantema",
+    "diabetes",
+    "hipertensao",
+    "doenca_hematologica",
+    "doenca_hepatica",
+    "doenca_renal",
+    "doenca_autoimune"
+  ],
+  "alvo": "Caso de dengue notificado classificado como 'com sinais de alarme' ou 'grave' (CLASSI_FIN 11/12) vs. 'dengue' (10)",
+  "prevalencia": 0.01843302884457977,
+  "metricas": {
+    "auc_teste": 0.6730666618375026,
+    "average_precision": 0.04208020707802645,
+    "recall_limiar": 0.5583185316755477,
+    "precisao_limiar": 0.03398443131036471
+  },
+  "n_treino": 366516,
+  "viavel": true,
+  "sintetico": false,
+  "sklearn": "1.9.0",
+  "origem": {
+    "arquivo": "data/DENGBR24.csv.zip",
+    "amostra_aleatoria": 500000,
+    "max_linhas": null,
+    "semente": 42,
+    "sha256": "1b6b7bf7f6b1fdab4ed2314edc2f57919c33b8103988383f22b7d4776c4a931a"
+  }
+}
