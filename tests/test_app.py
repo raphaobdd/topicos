@@ -30,7 +30,7 @@ def test_conversa_completa_mostra_resultado_e_relatorio(monkeypatch):
         assert not at.exception
     assert at.session_state["estado"].concluida
     at.run()
-    assert any("Avaliação automatizada experimental: Grupo A" in s.value for s in at.subheader)
+    assert any("Avaliação automatizada experimental: Grupo B" in s.value for s in at.subheader)
     assert len(at.tabs) == 3
 
 

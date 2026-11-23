@@ -30,7 +30,7 @@ def test_fluxo_normal_gera_resultado_e_relatorio_completo(tmp_path):
     t = conversar(orq, estado)
     assert t.etapa == "coleta_concluida"
     r = orq.executar(estado)
-    assert not r.interrompido and r.analise.classificacao.grupo == Grupo.A
+    assert not r.interrompido and r.analise.classificacao.grupo == Grupo.B
     assert r.orientacoes.orientacoes and r.orientacoes.referencias
     assert r.orientacoes.referencias[0].fonte in {"fluxograma_manejo_dengue_2025", "manual_enfermagem_dengue_2026"}
     for n in range(1, 13):

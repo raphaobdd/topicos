@@ -221,6 +221,10 @@ class AgenteRelatorio:
             "---",
             f"*{AVISO}*",
         ]
+        if estado.inconsistencias:
+            pos = L.index("---")
+            L[pos:pos] = ["**Relatos que precisam de esclarecimento `[Paciente]`:**",
+                          *[f"- {item}" for item in estado.inconsistencias], ""]
         return "\n".join(L)
 
     # ------------------------------------------------------------------ #

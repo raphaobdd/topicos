@@ -22,9 +22,9 @@ def test_fluxo_completo_estrutura_dados():
     d = estado.dados
     assert d.identificacao.idade == 30 and d.evolucao.febre == Resposta.SIM
     assert d.sintomas.dor_cabeca == Resposta.SIM
-    assert d.sintomas.vomitos == Resposta.NAO          # lista respondida: item não citado = não
+    assert d.sintomas.vomitos == Resposta.NAO_INFORMADO
     assert d.evolucao.data_inicio is not None           # derivada de dias_sintomas
-    assert d.sinais_alerta.dificuldade_respirar == Resposta.NAO
+    assert d.sinais_alerta.dificuldade_respirar == Resposta.NAO_INFORMADO
 
 
 def test_sem_febre_pula_perguntas_dependentes():

@@ -169,6 +169,7 @@ class ColetaEstado(BaseModel):
     dados: DadosPaciente = Field(default_factory=DadosPaciente)
     perguntadas: list[str] = Field(default_factory=list)
     tentativas: dict[str, int] = Field(default_factory=dict)
+    inconsistencias: list[str] = Field(default_factory=list)
     atual: Optional[str] = None
     mensagens: list[Mensagem] = Field(default_factory=list)
     concluida: bool = False
