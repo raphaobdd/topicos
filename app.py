@@ -19,6 +19,14 @@ if pagina == "Avalia??o e Desempenho":
     st.caption("Resultados experimentais; n?o representam valida??o cl?nica.")
     comparacao = Path("models/comparacao.json")
     benchmark = Path("models/benchmark.json")
+    modelo_ativo = Path("models/xgboost_dengue.metricas.json")
+    if modelo_ativo.exists():
+        ativo = json.loads(modelo_ativo.read_text(encoding="utf-8"))
+        st.subheader("Modelo ativo: XGBoost")
+        st.caption(f"Amostra: {ativo['origem'].get('amostra_aleatoria')} registros · Treino: {ativo['n_treino']} · Teste: {ativo['n_teste']}")
+        st.write("ROC-AUC", ativo["metricas"]["auc_teste"],
+                 "Average precision", ativo["metricas"]["average_precision"])
+        st.write("Matriz de confusão [[TN, FP], [FN, TP]]", ativo["metricas"]["matriz_confusao"])
     if comparacao.exists():
         dados = json.loads(comparacao.read_text(encoding="utf-8"))
         st.subheader("Modelos SINAN")
