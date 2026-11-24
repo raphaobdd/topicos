@@ -1,6 +1,6 @@
 """Agente 2 — análise e classificação inicial.
 
-Combina: (1) regras do protocolo (safety.classificar_manejo), (2) a árvore de decisão,
+Combina: (1) regras do protocolo (safety.classificar_manejo), (2) o XGBoost,
 quando existir e for viável, e (3) um resumo em linguagem simples escrito pelo LLM.
 
 O GRUPO (A/B/C/D) vem SEMPRE das regras. O LLM só redige o resumo e não pode alterá-lo.
@@ -20,7 +20,7 @@ Escreva UM parágrafo curto (3 a 5 frases), em português simples, resumindo a a
 Regras:
 - Use somente os dados fornecidos. Não invente fatos, não faça diagnóstico, não indique medicamentos.
 - NÃO altere o grupo (A/B/C/D) nem a justificativa: apenas explique-os com clareza.
-- Se houver estimativa da árvore de decisão, descreva-a como estatística de casos notificados, nunca como previsão individual.
+- Se houver escore XGBoost, descreva-o como estatística de casos notificados, nunca como previsão individual.
 - Deixe claro que a avaliação é experimental e que a avaliação profissional é indispensável.
 """
 
@@ -38,7 +38,7 @@ class AgenteAnalise:
 
         arvore, motivo = None, None
         if self.preditor is None:
-            motivo = "modelo de árvore de decisão não disponível"
+            motivo = "modelo XGBoost não disponível"
         elif not self.preditor.utilizavel:
             motivo = self.preditor.motivo_nao_utilizavel
         else:
@@ -85,12 +85,11 @@ class AgenteAnalise:
         if a.arvore:
             t = a.arvore
             prompt += (
-                f"Árvore de decisão: probabilidade estimada {t.probabilidade:.1%} de o caso ser "
-                f"classificado como dengue com sinais de alarme/grave; prevalência geral {t.prevalencia_base:.1%}; "
-                f"nível {t.nivel}.\n"
+                f"XGBoost: escore ponderado {t.probabilidade:.1%} para a classe SINAN "
+                f"dengue com sinais de alarme/grave; não é probabilidade clínica calibrada.\n"
             )
         else:
-            prompt += f"Árvore de decisão: não utilizada ({a.arvore_motivo_ausencia}).\n"
+            prompt += f"XGBoost: não utilizado ({a.arvore_motivo_ausencia}).\n"
         if contexto:
             prompt += f"Trechos documentais de apoio (não alteram o grupo):\n{contexto}\n"
         try:

@@ -1,0 +1,59 @@
+{
+  "tipo_modelo": "XGBoost",
+  "features": [
+    "idade_anos",
+    "sexo_feminino",
+    "gestante",
+    "dias_sintomas",
+    "febre",
+    "cefaleia",
+    "dor_retro_orbitaria",
+    "mialgia",
+    "artralgia",
+    "nausea",
+    "vomito",
+    "exantema",
+    "diabetes",
+    "hipertensao",
+    "doenca_hematologica",
+    "doenca_hepatica",
+    "doenca_renal",
+    "doenca_autoimune"
+  ],
+  "alvo": "Caso de dengue notificado classificado como 'com sinais de alarme' ou 'grave' (CLASSI_FIN 11/12) vs. 'dengue' (10)",
+  "prevalencia": 0.01843302884457977,
+  "limiar": 0.7130987048149109,
+  "metricas": {
+    "auc_teste": 0.6920486536437356,
+    "average_precision": 0.05133342397739371,
+    "matriz_confusao": [
+      [
+        86161,
+        3780
+      ],
+      [
+        1404,
+        285
+      ]
+    ],
+    "cv_average_precision": 0.0517599512681395,
+    "limiar_validacao": 0.7130987048149109
+  },
+  "n_treino": 366516,
+  "n_teste": 91630,
+  "positivos_teste": 1689,
+  "parametros": {
+    "learning_rate": 0.05,
+    "max_depth": 3,
+    "min_child_weight": 20
+  },
+  "viavel": true,
+  "sintetico": false,
+  "sklearn": "1.9.0",
+  "xgboost": "3.4.1",
+  "origem": {
+    "arquivo": "data/DENGBR24.csv.zip",
+    "amostra_aleatoria": 500000,
+    "semente": 42
+  }
+}

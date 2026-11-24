@@ -155,13 +155,13 @@ class AgenteRelatorio:
             "",
             "> A classificação definitiva depende de avaliação clínica e dos critérios do protocolo.",
             "",
-            "## 9. Árvore de decisão `[Sistema]`",
+            "## 9. XGBoost `[Sistema]`",
         ]
         if analise.arvore:
             t = analise.arvore
             L += [
                 f"- Alvo do modelo: {t.alvo}.",
-                f"- Probabilidade estimada: **{t.probabilidade:.1%}** (prevalência geral {t.prevalencia_base:.1%}; {t.nivel}).",
+                f"- Escore XGBoost ponderado: **{t.probabilidade:.1%}** (não é probabilidade clínica calibrada).",
                 f"- AUC no teste: {t.auc_teste:.2f}" if t.auc_teste else "- AUC no teste: não disponível",
                 *[f"- ⚠️ {a}" for a in t.avisos],
                 "",

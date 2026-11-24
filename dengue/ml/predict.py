@@ -66,3 +66,19 @@ class PreditorArvore:
             n_variaveis_ausentes=ausentes,
             avisos=avisos,
         )
+
+
+class PreditorXGBoost(PreditorArvore):
+    """Mant?m o contrato de sa?da existente para o modelo XGBoost."""
+
+    @classmethod
+    def carregar(cls, caminho: Path | str | None = None) -> Optional["PreditorXGBoost"]:
+        return super().carregar(caminho or config.MODELO_XGBOOST)
+
+    def prever(self, dados: DadosPaciente) -> PrevisaoArvore:
+        resultado = super().prever(dados)
+        resultado.avisos[0] = (
+            "Escore estat?stico XGBoost treinado com pondera??o de classes em casos SINAN; "
+            "n?o ? probabilidade cl?nica calibrada, diagn?stico ou progn?stico individual."
+        )
+        return resultado

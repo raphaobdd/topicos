@@ -162,5 +162,5 @@ if estado.concluida:
         with st.expander("Dados estruturados (JSON)"):
             st.json(estado.dados.model_dump(mode="json"))
         if r.analise.arvore:
-            with st.expander("Árvore de decisão"):
+            with st.expander("XGBoost"):
                 st.json(r.analise.arvore.model_dump(mode="json"))

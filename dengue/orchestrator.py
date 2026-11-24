@@ -18,7 +18,7 @@ from .agents.orientacoes import AgenteOrientacoes
 from .agents.relatorio import AgenteRelatorio
 from .db import Repositorio, RepositorioNulo
 from .llm import LLM
-from .ml.predict import PreditorArvore
+from .ml.predict import PreditorArvore, PreditorXGBoost
 from .rag.retriever import Retriever
 from .safety import mensagem_urgente, verificar_seguranca
 from .schemas import ColetaEstado, ResultadoSessao
@@ -91,7 +91,7 @@ class Orquestrador:
         else:
             analise = self.analise.analisar(estado.dados, seg)
             etapas.append(f"Agente 2: classificação experimental Grupo {analise.classificacao.grupo.value}"
-                          + (" + árvore de decisão" if analise.arvore else ""))
+                          + (" + XGBoost" if analise.arvore else ""))
             orient = self.orientacoes.orientar(estado.dados, analise)
             etapas.append("Agente 3: orientações" + (" (sem contexto de documentos)" if orient.contexto_insuficiente else " com RAG"))
 
@@ -125,7 +125,7 @@ class Orquestrador:
         return {
             "LLM": config.OPENAI_MODEL,
             "RAG": rag,
-            "Árvore de decisão": (
+            "XGBoost": (
                 "ativa" if self._preditor and self._preditor.utilizavel
                 else f"inativa ({self._preditor.motivo_nao_utilizavel})" if self._preditor
                 else "sem modelo treinado"
@@ -144,6 +144,6 @@ def criar_orquestrador() -> Orquestrador:
     return Orquestrador(
         llm,
         retriever=retriever,
-        preditor=PreditorArvore.carregar(),
+        preditor=PreditorXGBoost.carregar(),
         repositorio=criar_repositorio(),
     )

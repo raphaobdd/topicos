@@ -105,6 +105,17 @@ O RAG serve de apoio documental. A classificação A/B/C/D continua determinada 
 - Se mudar `EMBED_DIM`, recrie a coluna/índice `vector(...)` e reindexe os documentos.
 # Avaliação experimental
 
+O Agente 2 carrega `models/xgboost_dengue.joblib` quando o modelo atinge o
+limiar mínimo de ROC-AUC no teste. Para reproduzir o treino usado na aplicação:
+
+```bash
+python -m dengue.ml.train_xgboost --csv data/DENGBR24.csv.zip --amostra-aleatoria 500000
+```
+
+O escore XGBoost ponderado não é uma probabilidade clínica calibrada. A
+classificação A/B/C/D e a interrupção por sinais de alerta continuam seguindo
+as regras explícitas do protocolo.
+
 Compare modelos com `python -m dengue.ml.compare --csv data/DENGBR24.csv.zip`.
 O script reserva 20% dos registros elegíveis para teste, ajusta hiperparâmetros
 por validação cruzada no treino e escolhe o limiar em uma validação separada.

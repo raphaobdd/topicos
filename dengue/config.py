@@ -23,6 +23,7 @@ RAG_STORE = os.getenv("RAG_STORE", "auto").lower()
 DOCS_DIR = RAIZ / "data" / "docs"
 LOCAL_STORE = RAIZ / "data" / "vetores_locais.json"
 MODELO_ARVORE = RAIZ / "models" / "arvore_dengue.joblib"
+MODELO_XGBOOST = RAIZ / "models" / "xgboost_dengue.joblib"
 
 AVISO_CURTO = (
     "Protótipo acadêmico e experimental. Não substitui consulta médica, não faz "
