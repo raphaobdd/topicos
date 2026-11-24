@@ -103,3 +103,25 @@ Todos os PDFs ficam na mesma tabela `documentos`. Cada trecho recebe um marcador
 O RAG serve de apoio documental. A classificação A/B/C/D continua determinada pelas regras e o relatório não constitui notificação oficial ao SINAN. As fontes e seus hashes estão em `data/FONTES.md`.
 - Confira no dicionário do DENGBR24 os códigos usados em `dengue/ml/features.py` (`CLASSI_FIN`, `CS_GESTANT`, `NU_IDADE_N`, nomes de colunas) e o separador do CSV (`--sep`).
 - Se mudar `EMBED_DIM`, recrie a coluna/índice `vector(...)` e reindexe os documentos.
+# Avaliação experimental
+
+Compare modelos com `python -m dengue.ml.compare --csv data/DENGBR24.csv.zip`.
+O script reserva 20% dos registros elegíveis para teste, ajusta hiperparâmetros
+por validação cruzada no treino e escolhe o limiar em uma validação separada.
+XGBoost, LightGBM e CatBoost entram na comparação quando instalados. O arquivo
+`models/comparacao.json` alimenta a página **Avaliação e Desempenho** no Streamlit.
+O alvo SINAN (CLASSI_FIN 11/12 versus 10) não equivale aos grupos A/B/C/D.
+
+Para avaliar a aplicação, crie um JSONL com um caso por linha, por exemplo:
+
+```json
+{"id":"A001","grupo":"A","alerta":false,"mensagens":["Tenho febre há dois dias"],"campos_esperados":{"evolucao.febre":"sim"}}
+```
+
+Execute `python -m dengue.benchmark --casos data/casos_revisados.jsonl`.
+Cada caso passa pela conversa, orquestrador, análise, orientações e relatório.
+Os 200 casos propostos ainda precisam ser escritos e revisados por profissional
+de saúde. A verificação automática de referências confirma apenas que os números
+citados existem; fidelidade semântica e qualidade clínica exigem revisão humana.
+Nenhum resultado experimental equivale a validação clínica.
+

@@ -2,12 +2,45 @@
 from __future__ import annotations
 
 import streamlit as st
+import json
+from pathlib import Path
+import pandas as pd
 
 from dengue import config
 from dengue.orchestrator import criar_orquestrador
 from dengue.schemas import DESCRICAO_GRUPOS
 
 st.set_page_config(page_title="Triagem de dengue (protótipo)", page_icon="🩺", layout="centered")
+
+
+pagina = st.sidebar.radio("P?gina", ["Triagem", "Avalia??o e Desempenho"])
+if pagina == "Avalia??o e Desempenho":
+    st.title("Avalia??o e Desempenho")
+    st.caption("Resultados experimentais; n?o representam valida??o cl?nica.")
+    comparacao = Path("models/comparacao.json")
+    benchmark = Path("models/benchmark.json")
+    if comparacao.exists():
+        dados = json.loads(comparacao.read_text(encoding="utf-8"))
+        st.subheader("Modelos SINAN")
+        st.caption(f"{dados['alvo']} ? Treino: {dados['n_treino']} ? Teste: {dados['n_teste']} ? Positivos no teste: {dados['positivos_teste']}")
+        st.dataframe(pd.DataFrame([{k: r[k] for k in ("modelo", "auc_teste", "average_precision", "cv_ap", "limiar_validacao")}
+                                   for r in dados["resultados"]]), hide_index=True)
+        escolhido = st.selectbox("Modelo", [r["modelo"] for r in dados["resultados"]])
+        r = next(item for item in dados["resultados"] if item["modelo"] == escolhido)
+        st.write("Matriz de confus?o [[TN, FP], [FN, TP]]", r["matriz_confusao"])
+        st.line_chart(pd.DataFrame({"FPR": r["roc"]["fpr"], "TPR": r["roc"]["tpr"]}).set_index("FPR"))
+        st.line_chart(pd.DataFrame({"Recall": r["pr"]["recall"], "Precis?o": r["pr"]["precision"]}).set_index("Recall"))
+    else:
+        st.info("Execute `python -m dengue.ml.compare --csv CAMINHO_DO_SINAN` para gerar a compara??o.")
+    if benchmark.exists():
+        dados = json.loads(benchmark.read_text(encoding="utf-8"))
+        st.subheader("Benchmark da aplica??o")
+        st.caption(f"{dados['n_casos']} casos ? {dados['gerado_em']} ? {dados['aviso']}")
+        st.json(dados["metricas"])
+        st.dataframe(pd.DataFrame(dados["casos"]), hide_index=True)
+    else:
+        st.info("Execute `python -m dengue.benchmark --casos CAMINHO_DOS_CASOS.jsonl` para avaliar o fluxo.")
+    st.stop()
 
 
 @st.cache_resource(show_spinner="Iniciando componentes...")
